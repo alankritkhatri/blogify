@@ -60,11 +60,6 @@ function Home() {
                 Create and share your own blog
               </h1>
             </div>
-            <img
-              src="/a8099418b2137e113c808fff5df2dc2a.gif"
-              alt="Blogify"
-              className="w-96 h-16"
-            />
             <p className="text-xl mb-8">
               Easily publish your thoughts, stories, and ideas with our simple
               blogging platform.
