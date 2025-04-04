@@ -34,66 +34,53 @@ const articleSchema = new mongoose.Schema({
   }
 });
 
-const blogCollectionSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
+const blogCollectionSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    slug: {
+      type: String,
+      unique: true,
+    },
+    subdomain: {
+      type: String,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    articles: [articleSchema],
+    isPublic: {
+      type: Boolean,
+      default: true,
+    },
+    coverImage: {
+      type: String,
+    },
   },
-  slug: {
-    type: String,
-    unique: true
-  },
-  subdomain: {
-    type: String,
-    unique: true,
-    trim: true,
-    lowercase: true,
-    match: [/^[a-z0-9-]+$/, 'Subdomain can only contain lowercase letters, numbers, and hyphens'],
-    sparse: true
-  },
-  description: {
-    type: String,
-    required: true
-  },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  ownerUsername: {
-    type: String,
-    required: true,
-    ref: 'User'
-  },
-  articles: [articleSchema],
-  isPublic: {
-    type: Boolean,
-    default: true
-  },
-  coverImage: {
-    type: String
+  {
+    timestamps: true,
   }
-}, {
-  timestamps: true
-}); 
+);
 
 blogCollectionSchema.pre("save", function (next) {
-  if (this.isModified("name") || !this.slug) {
-    const baseSlug = slugify(this.name, {
-      lower: true,
-      strict: true,
-    });
-
-    this.slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
-  }
-
-  if (this.isModified("name") && !this.subdomain) {
-    this.subdomain = slugify(this.name, {
-      lower: true,
-      strict: true,
-      remove: /[^a-z0-9-]/g,
-    });
+  if (this.isModified("name")) {
+    this.slug =
+      slugify(this.name, { lower: true, strict: true }) +
+      "-" +
+      Date.now().toString().slice(-4);
+    this.subdomain = slugify(this.name, { lower: true, strict: true });
   }
 
   if (this.isModified("articles")) {
@@ -115,16 +102,17 @@ blogCollectionSchema.pre("save", function (next) {
   next();
 });
 
-blogCollectionSchema.methods.incrementArticleShare = function(articleSlug, platform) {
-  const article = this.articles.find(a => a.slug === articleSlug);
+blogCollectionSchema.methods.incrementArticleShare = function (
+  articleSlug,
+  platform
+) {
+  const article = this.articles.find((a) => a.slug === articleSlug);
   if (article) {
-    if (platform && article.shares[platform] !== undefined) {
-      article.shares[platform] += 1;
-    }
+    if (platform) article.shares[platform] += 1;
     article.shareCount += 1;
     return this.save();
   }
-  return Promise.reject(new Error('Article not found'));
+  return Promise.reject(new Error("Article not found"));
 };
 
 const BlogCollection = mongoose.model('BlogCollection', blogCollectionSchema);

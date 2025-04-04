@@ -14,7 +14,7 @@ app.use(
       "http://localhost:5173",
       "https://blogify-rose-five.vercel.app",
     ],
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS", "PUT"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
