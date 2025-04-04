@@ -36,13 +36,11 @@ function Home() {
   const fetchLatestPosts = async () => {
     try {
       setPostsLoading(true);
-      const response = await api.get('/blogs');
-      console.log('Fetched latest posts:', response.data);
+      const response = await api.get("/blogs");
       setLatestPosts(response.data.articles || []);
       setPostsError(null);
     } catch (err) {
-      console.error('Error fetching latest posts:', err);
-      setPostsError('Failed to load latest posts. Please try again later.');
+      setPostsError("Failed to load latest posts. Please try again later.");
     } finally {
       setPostsLoading(false);
     }
@@ -79,76 +77,6 @@ function Home() {
             )}
           </div>
         </div>
-      </div>
-
-      {/* Latest Posts Section */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold">Latest Posts</h2>
-          <p className="text-gray-600">
-            Discover the newest content from our community
-          </p>
-        </div>
-
-        {postsError && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 mb-6 rounded-lg">
-            {postsError}
-          </div>
-        )}
-
-        {postsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl shadow-md overflow-hidden animate-pulse"
-              >
-                <div className="p-6">
-                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-4/5 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mt-4"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {latestPosts.length > 0 ? (
-              latestPosts.map((post) => (
-                <Link
-                  key={post.articleId}
-                  to={`/blog/collection/${post.collectionId}/${post.slug}`}
-                  className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-                >
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2 hover:text-primary transition-colors">
-                      {post.title}
-                    </h3>
-                    <p className="text-gray-600 mb-4 line-clamp-2">
-                      {post.content.replace(/<[^>]*>?/gm, "").substring(0, 120)}
-                      ...
-                    </p>
-                    <div className="flex items-center justify-between mt-4">
-                      <span className="text-sm text-gray-500">
-                        By {post.ownerUsername}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {new Date(post.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))
-            ) : (
-              <div className="col-span-3 text-center py-8">
-                <p className="text-gray-600">
-                  No posts available yet. Be the first to create one!
-                </p>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Blogs Section */}

@@ -35,10 +35,6 @@ function App() {
           }
         />
         <Route
-          path="/blog/collection/:collectionId/:articleSlug"
-          element={<BlogDetail />}
-        />
-        <Route
           path="/blog/edit/:collectionId/:articleSlug"
           element={
             <ProtectedRoute>
@@ -73,7 +69,6 @@ function App() {
         <Route path="/collections/:id" element={<BlogCollectionDetail />} />
         <Route path="/:subdomain" element={<SubdomainBlog />} />
         <Route path="/:subdomain/:slug" element={<SubdomainArticle />} />
-        <Route path="/user/:username/:slug" element={<BlogDetail />} />
       </Routes>
     </div>
   );
