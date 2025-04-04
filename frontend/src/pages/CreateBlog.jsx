@@ -70,9 +70,9 @@ const CreateBlog = () => {
       });
 
       if (response.data.article && response.data.article.slug) {
-        navigate(
-          `/blog/collection/${collectionId}/${response.data.article.slug}`
-        );
+        navigate(`/collections/${collectionId}`, {
+          state: { message: "Blog post created successfully!" },
+        });
       } else {
         navigate(`/collections/${collectionId}`);
       }
