@@ -4,71 +4,130 @@ const router = express.Router();
 const BlogCollection = require('../models/BlogCollection');
 
 router.get("/", async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const searchQuery = req.query.search;
 
-  const articles = await BlogCollection.aggregate([
-    { $match: { isPublic: true } },
-    { $unwind: "$articles" },
-    { $sort: { "articles.createdAt": -1 } },
-    { $skip: skip },
-    { $limit: limit },
-    {
-      $project: {
-        collectionId: "$_id",
-        title: "$articles.title",
-        slug: "$articles.slug",
-        content: "$articles.content",
+    let aggregationPipeline = [
+      { $match: { isPublic: true } },
+      { $unwind: "$articles" },
+      { $sort: { "articles.createdAt": -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          _id: 0,
+          collectionId: "$_id",
+          collectionName: "$name",
+          collectionSlug: "$slug",
+          ownerUsername: 1,
+          articleId: "$articles._id",
+          title: "$articles.title",
+          slug: "$articles.slug",
+          content: "$articles.content",
+          createdAt: "$articles.createdAt",
+          updatedAt: "$articles.updatedAt",
+          shareCount: "$articles.shareCount",
+        },
       },
-    },
-  ]);
+    ];
 
-  const total = await BlogCollection.aggregate([
-    { $match: { isPublic: true } },
-    { $unwind: "$articles" },
-    { $count: "total" },
-  ]);
-  res.json({
-    articles,
-    currentPage: page,
-    totalPages: Math.ceil(total[0]?.total / limit),
-    totalArticles: total[0]?.total,
-  });
+    if (searchQuery) {
+      aggregationPipeline.unshift({
+        $match: {
+          $or: [
+            { "articles.title": { $regex: searchQuery, $options: "i" } },
+            { "articles.content": { $regex: searchQuery, $options: "i" } },
+          ],
+        },
+      });
+    }
+
+    const articles = await BlogCollection.aggregate(aggregationPipeline);
+    const total = await BlogCollection.aggregate([
+      { $match: { isPublic: true } },
+      { $unwind: "$articles" },
+      { $count: "total" },
+    ]);
+
+    res.json({
+      articles,
+      currentPage: page,
+      totalPages: Math.ceil((total.length > 0 ? total[0].total : 0) / limit),
+      totalArticles: total.length > 0 ? total[0].total : 0,
+    });
+  } catch {
+    res.status(500).json({ message: "Error fetching articles" });
+  }
 });
 
 router.get("/:collectionId/:articleSlug", async (req, res) => {
-  const collection = await BlogCollection.findById(req.params.collectionId);
-  const article = collection.articles.find(
-    (a) => a.slug === req.params.articleSlug
-  );
-  res.json({ article });
+  try {
+    const { collectionId, articleSlug } = req.params;
+    const collection = await BlogCollection.findById(collectionId);
+    if (!collection)
+      return res.status(404).json({ message: "Collection not found" });
+
+    const article = collection.articles.find((a) => a.slug === articleSlug);
+    if (!article) return res.status(404).json({ message: "Article not found" });
+
+    res.json({
+      article,
+      collectionName: collection.name,
+      ownerUsername: collection.ownerUsername,
+    });
+  } catch {
+    res.status(500).json({ message: "Error fetching article" });
+  }
 });
 
 router.post("/:collectionId", auth, async (req, res) => {
-  const { title, content } = req.body;
-  const slug = `${title.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
-  const newArticle = {
-    title,
-    content,
-    slug,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-  const blogCollection = await BlogCollection.findById(req.params.collectionId);
-  blogCollection.articles.push(newArticle);
-  await blogCollection.save();
-  res.status(201).json(newArticle);
-});
+  try {
+    const { title, content } = req.body;
+    const { collectionId } = req.params;
 
-router.delete("/:collectionId/:articleSlug", auth, async (req, res) => {
-  const blogCollection = await BlogCollection.findById(req.params.collectionId);
-  const articleIndex = blogCollection.articles.findIndex(
-    (a) => a.slug === req.params.articleSlug
-  );
-  blogCollection.articles.splice(articleIndex, 1);
-  await blogCollection.save();
-  res.json({ message: "Deleted" });
+    if (
+      !title ||
+      !content ||
+      title.length < 3 ||
+      title.length > 100 ||
+      content.length < 10
+    ) {
+      return res.status(400).json({ message: "Invalid input" });
+    }
+
+    const blogCollection = await BlogCollection.findById(collectionId);
+    if (
+      !blogCollection ||
+      blogCollection.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const slug = `${title.toLowerCase().replace(/\s+/g, "-")}-${Date.now()
+      .toString()
+      .slice(-4)}`;
+    const newArticle = {
+      title,
+      content,
+      slug,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    blogCollection.articles.push(newArticle);
+    await blogCollection.save();
+
+    res.status(201).json({
+      article: newArticle,
+      collectionName: blogCollection.name,
+      collectionSlug: blogCollection.slug,
+    });
+  } catch {
+    res.status(500).json({ message: "Error creating article" });
+  }
 });
 
 router.patch("/:collectionId/:articleSlug", auth, async (req, res) => {
@@ -104,6 +163,31 @@ router.patch("/:collectionId/:articleSlug", auth, async (req, res) => {
     res.json({ article, collectionName: blogCollection.name });
   } catch {
     res.status(500).json({ message: "Error updating article" });
+  }
+});
+
+router.delete("/:collectionId/:articleSlug", auth, async (req, res) => {
+  try {
+    const { collectionId, articleSlug } = req.params;
+    const blogCollection = await BlogCollection.findById(collectionId);
+    if (
+      !blogCollection ||
+      blogCollection.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const articleIndex = blogCollection.articles.findIndex(
+      (a) => a.slug === articleSlug
+    );
+    if (articleIndex === -1)
+      return res.status(404).json({ message: "Article not found" });
+
+    blogCollection.articles.splice(articleIndex, 1);
+    await blogCollection.save();
+    res.json({ message: "Article deleted successfully" });
+  } catch {
+    res.status(500).json({ message: "Error deleting article" });
   }
 });
 

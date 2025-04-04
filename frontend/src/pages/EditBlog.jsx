@@ -57,10 +57,7 @@ const EditBlog = () => {
               setBlogData(response.data);
             }
           } catch (err) {
-            console.error(
-              "This route is no longer supported with the new data model",
-              err
-            );
+
             setError(
               "This blog post URL is outdated. Please use the new URL format."
             );

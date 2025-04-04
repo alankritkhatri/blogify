@@ -19,39 +19,28 @@ function SubdomainArticle() {
   }, [subdomain, slug]);
 
   const fetchArticle = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const collectionResponse = await api.get(
         `/blog-collections/by-subdomain/${subdomain}`
       );
-
-      if (!collectionResponse.data) {
+      if (!collectionResponse.data)
         throw new Error("Blog collection not found");
-      }
 
       const blogCollection = collectionResponse.data;
       setCollection(blogCollection);
-      
-      const article = blogCollection.articles.find(a => a.slug === slug);
-      
-      if (!article) {
-        throw new Error('Article not found');
-      }
-      
-      console.log('Article found:', article);
-      setArticleData({
-        ...article,
-        collectionId: blogCollection._id
-      });
+      const article = blogCollection.articles.find((a) => a.slug === slug);
+      if (!article) throw new Error("Article not found");
+
+      setArticleData({ ...article, collectionId: blogCollection._id });
       setError(null);
     } catch (err) {
-      console.error('Error fetching article:', err);
-      if (err.response?.status === 404 || err.message === 'Article not found' || err.message === 'Blog collection not found') {
-        setError('This article does not exist or has been removed.');
+      if (err.response?.status === 404) {
+        setError("This article does not exist or has been removed.");
       } else if (err.response?.status === 401 || err.response?.status === 403) {
-        setError('This blog is private. You need to be logged in to view it.');
+        setError("This blog is private. You need to be logged in to view it.");
       } else {
-        setError('Failed to load the article. Please try again later.');
+        setError("Failed to load the article. Please try again later.");
       }
     } finally {
       setIsLoading(false);
