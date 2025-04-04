@@ -65,34 +65,33 @@ function CreateBlogCollection() {
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    // Special handling for subdomain - convert to lowercase and remove invalid chars
-    if (name === 'subdomain') {
-      const formattedValue = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+
+    if (name === "subdomain") {
+      const formattedValue = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
       setFormData({
         ...formData,
-        [name]: formattedValue
+        [name]: formattedValue,
       });
     } else {
       setFormData({
         ...formData,
-        [name]: type === 'checkbox' ? checked : value
+        [name]: type === "checkbox" ? checked : value,
       });
     }
-    
-    // Auto-generate subdomain from name if subdomain is empty
-    if (name === 'name' && !formData.subdomain) {
-      const subdomain = value.toLowerCase()
-        .replace(/\s+/g, '-')       // Replace spaces with hyphens
-        .replace(/[^a-z0-9-]/g, '') // Remove special characters
-        .replace(/-+/g, '-');       // Replace multiple hyphens with single hyphen
-      
-      setFormData(prev => ({
+
+    if (name === "name" && !formData.subdomain) {
+      const subdomain = value
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "")
+        .replace(/-+/g, "-");
+
+      setFormData((prev) => ({
         ...prev,
-        subdomain
+        subdomain,
       }));
     }
     
-    // Clear error when user types
     if (errors[name]) {
       setErrors({
         ...errors,

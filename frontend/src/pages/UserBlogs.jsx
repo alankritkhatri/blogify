@@ -15,30 +15,28 @@ const UserBlogs = () => {
         setLoading(true);
         const response = await api.get(`/blogs/user/${username}`);
         setBlogs(response.data.blogs || []);
-        
-        // If we have blogs, set the user from the first blog's author
+
         if (response.data.blogs.length > 0) {
           setUser({
             name: response.data.blogs[0].author.name,
-            username: response.data.blogs[0].authorUsername
+            username: response.data.blogs[0].authorUsername,
           });
         }
-        
+
         setError(null);
       } catch (err) {
-        setError('Failed to fetch blogs. Please try again later.');
+        setError("Failed to fetch blogs. Please try again later.");
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchUserBlogs();
   }, [username]);
 
   return (
     <div className="min-h-screen container mx-auto px-4 py-8">
-      {/* User Profile Header */}
       <div className="mb-10 text-center">
         <h1 className="text-3xl font-bold mb-2">
           {user ? `${user.name}'s Blog` : `Blog by ${username}`}

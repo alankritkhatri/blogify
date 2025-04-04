@@ -77,61 +77,68 @@ const EditBlog = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!title.trim() || !content.trim()) {
-      setError('Title and content are required');
+      setError("Title and content are required");
       return;
     }
 
     try {
       setSubmitting(true);
       setError(null);
-      
+
       if (collectionId && articleSlug) {
-        // New model - update article in collection
         await api.patch(`/blogs/${collectionId}/${articleSlug}`, {
           title,
-          content
+          content,
         });
-        
-        // Navigate to the updated article
+
         navigate(`/blog/collection/${collectionId}/${articleSlug}`);
       } else if (id && blogData) {
-        // Legacy model - will likely fail with new backend
-        console.warn('Using deprecated API endpoints. Please update to collection/article pattern.');
+        console.warn(
+          "Using deprecated API endpoints. Please update to collection/article pattern."
+        );
         try {
           await api.patch(`/blogs/${id}`, {
             title,
-            content
+            content,
           });
           navigate(`/blog/${id}`);
         } catch (err) {
-          console.error('This route is no longer supported with the new data model', err);
-          setError('This blog post update failed due to model changes. Please use the new URL format.');
+          console.error(
+            "This route is no longer supported with the new data model",
+            err
+          );
+          setError(
+            "This blog post update failed due to model changes. Please use the new URL format."
+          );
           setSubmitting(false);
         }
       } else {
-        throw new Error('Invalid blog data');
+        throw new Error("Invalid blog data");
       }
     } catch (err) {
-      console.error('Failed to update blog post:', err);
-      setError('Failed to update blog post: ' + (err.response?.data?.error || err.message));
+      console.error("Failed to update blog post:", err);
+      setError(
+        "Failed to update blog post: " +
+          (err.response?.data?.error || err.message)
+      );
       setSubmitting(false);
     }
   };
 
-  // Check if user is authorized to edit this blog
   useEffect(() => {
     if (!loading && blogData) {
-      // For new model
-      if (collectionId && articleSlug && blogData.ownerUsername !== user?.username) {
-        setError('You are not authorized to edit this blog post');
-        setTimeout(() => navigate('/'), 3000);
-      }
-      // For legacy model
-      else if (id && blogData.author && blogData.author._id !== user?.id) {
-        setError('You are not authorized to edit this blog post');
-        setTimeout(() => navigate('/'), 3000);
+      if (
+        collectionId &&
+        articleSlug &&
+        blogData.ownerUsername !== user?.username
+      ) {
+        setError("You are not authorized to edit this blog post");
+        setTimeout(() => navigate("/"), 3000);
+      } else if (id && blogData.author && blogData.author._id !== user?.id) {
+        setError("You are not authorized to edit this blog post");
+        setTimeout(() => navigate("/"), 3000);
       }
     }
   }, [loading, blogData, user, navigate, id, collectionId, articleSlug]);

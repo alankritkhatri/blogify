@@ -21,17 +21,17 @@ function SubdomainArticle() {
   const fetchArticle = async () => {
     try {
       setIsLoading(true);
-      // First, find the collection with this subdomain
-      const collectionResponse = await api.get(`/blog-collections/by-subdomain/${subdomain}`);
-      
+      const collectionResponse = await api.get(
+        `/blog-collections/by-subdomain/${subdomain}`
+      );
+
       if (!collectionResponse.data) {
-        throw new Error('Blog collection not found');
+        throw new Error("Blog collection not found");
       }
-      
+
       const blogCollection = collectionResponse.data;
       setCollection(blogCollection);
       
-      // Find the article with the matching slug in the collection's articles array
       const article = blogCollection.articles.find(a => a.slug === slug);
       
       if (!article) {
