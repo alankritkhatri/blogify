@@ -22,8 +22,7 @@ function Home() {
     try {
       setLoading(true);
       const response = await api.get('/blog-collections');
-      console.log('Fetched blog collections:', response.data);
-      // The API returns the collections property from the response
+      console.log("Fetched blog collections:", response.data);
       setBlogs(response.data.collections || []);
       setError(null);
     } catch (err) {
@@ -51,7 +50,6 @@ function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
       <div className="bg-primary py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center text-white">

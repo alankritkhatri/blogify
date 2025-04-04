@@ -7,7 +7,7 @@ import Register from "./pages/Register";
 import CreateBlog from "./pages/CreateBlog";
 import BlogDetail from "./pages/BlogDetail";
 import EditBlog from "./pages/EditBlog";
-import UserBlogs from "./pages/UserBlogs";
+
 import MyBlogCollections from "./pages/MyBlogCollections";
 import CreateBlogCollection from "./pages/CreateBlogCollection";
 import BlogCollectionDetail from "./pages/BlogCollectionDetail";
@@ -73,7 +73,6 @@ function App() {
         <Route path="/collections/:id" element={<BlogCollectionDetail />} />
         <Route path="/:subdomain" element={<SubdomainBlog />} />
         <Route path="/:subdomain/:slug" element={<SubdomainArticle />} />
-        <Route path="/user/:username" element={<UserBlogs />} />
         <Route path="/user/:username/:slug" element={<BlogDetail />} />
       </Routes>
     </div>

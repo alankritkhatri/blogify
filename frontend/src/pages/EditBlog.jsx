@@ -33,7 +33,6 @@ const EditBlog = () => {
         let response;
         
         if (collectionId && articleSlug) {
-          // New model - using collection ID and article slug
           response = await api.get(`/blogs/${collectionId}/${articleSlug}`);
           if (response.data && response.data.article) {
             setTitle(response.data.article.title);
@@ -43,13 +42,14 @@ const EditBlog = () => {
               articleSlug,
               ...response.data.article,
               ownerUsername: response.data.ownerUsername,
-              collectionName: response.data.collectionName
+              collectionName: response.data.collectionName,
             });
           }
         } else if (id) {
-          // Legacy model - using blog ID (will likely fail with new model)
           try {
-            console.warn('Using deprecated route structure. Please update to collection/article pattern.');
+            console.warn(
+              "Using deprecated route structure. Please update to collection/article pattern."
+            );
             response = await api.get(`/blogs/${id}`);
             if (response.data) {
               setTitle(response.data.title);
@@ -57,11 +57,16 @@ const EditBlog = () => {
               setBlogData(response.data);
             }
           } catch (err) {
-            console.error('This route is no longer supported with the new data model', err);
-            setError('This blog post URL is outdated. Please use the new URL format.');
+            console.error(
+              "This route is no longer supported with the new data model",
+              err
+            );
+            setError(
+              "This blog post URL is outdated. Please use the new URL format."
+            );
           }
         } else {
-          throw new Error('Invalid URL parameters');
+          throw new Error("Invalid URL parameters");
         }
         
         setLoading(false);

@@ -78,50 +78,43 @@ const blogCollectionSchema = new mongoose.Schema({
   timestamps: true
 }); 
 
-// Generate slug before saving
-blogCollectionSchema.pre('save', function(next) {
-  if (this.isModified('name') || !this.slug) {
-    // Create a base slug from name
+blogCollectionSchema.pre("save", function (next) {
+  if (this.isModified("name") || !this.slug) {
     const baseSlug = slugify(this.name, {
       lower: true,
-      strict: true
+      strict: true,
     });
-    
-    // Add a timestamp suffix to ensure uniqueness
+
     this.slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
   }
-  
-  // Generate subdomain from name if not provided
-  if (this.isModified('name') && !this.subdomain) {
+
+  if (this.isModified("name") && !this.subdomain) {
     this.subdomain = slugify(this.name, {
       lower: true,
       strict: true,
-      remove: /[^a-z0-9-]/g
+      remove: /[^a-z0-9-]/g,
     });
   }
-  
-  // Generate slugs for new articles
-  if (this.isModified('articles')) {
-    this.articles.forEach(article => {
+
+  if (this.isModified("articles")) {
+    this.articles.forEach((article) => {
       if (!article.slug) {
         const baseSlug = slugify(article.title, {
           lower: true,
-          strict: true
+          strict: true,
         });
         article.slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
       }
-      
-      // Update timestamps for modified articles
-      if (article.isModified && article.isModified('content')) {
+
+      if (article.isModified && article.isModified("content")) {
         article.updatedAt = Date.now();
       }
     });
   }
-  
+
   next();
 });
 
-// Method to increment article share count
 blogCollectionSchema.methods.incrementArticleShare = function(articleSlug, platform) {
   const article = this.articles.find(a => a.slug === articleSlug);
   if (article) {
